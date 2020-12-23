@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows Remote Audio Controller</title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+  <ul id="app" class="w-full m-auto mt-8 max-w-screen-md"></ul>
+  <script>
+    const rootEl = document.getElementById("app");
+    async function fetchAudioOutputs() {
+      const res = await fetch('/api/audio_devices');
+      return await res.json();
+    }
+    async function setDefaultAudioOutput(id) {
+      const res = await fetch(`/api/audio_devices/${encodeURI(id)}`,{method: "PATCH", body: JSON.stringify({is_default: true}), headers: {"Content-Type": "application/json"}});
+      await updateUI(rootEl);
+    }
+    function createRow(device) {
+      const domId = device.id.replace(/^[^a-z]+|[^\w:.-]+/gi, "");
+      const existingButton = document.querySelector(`#${domId} button`);
+      if (existingButton) {
+        existingButton.classList.toggle("bg-indigo-600", device.is_default);
+        existingButton.classList.toggle("text-white", device.is_default);
+        existingButton.classList.toggle("bg-gray-300", !device.is_default);
+        const existingButtonImg = document.querySelector(`#${domId} button img`);
+        existingButtonImg.classList.toggle("hidden", !device.is_default);
+        return;
+      }
+      const row = document.createElement("li");
+      row.className = "block m-2";
+      row.id = domId;
+      const button = document.createElement("button");
+      button.className =
+        "flex w-full py-2 px-4 rounded-md items-center justify-between";
+      button.addEventListener("click", () => setDefaultAudioOutput(device.id));
+      const imgCell = document.createElement("img");
+      imgCell.src = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iZmVhdGhlciBmZWF0aGVyLWNoZWNrIj48cG9seWxpbmUgcG9pbnRzPSIyMCA2IDkgMTcgNCAxMiI+PC9wb2x5bGluZT48L3N2Zz4=`;
+      const textCell = document.createElement("span");
+      textCell.className="truncate";
+      textCell.appendChild(document.createTextNode(device.name));
+      button.appendChild(textCell);
+      button.appendChild(imgCell);
+      if (device.is_default) {
+        button.classList.add("bg-indigo-600");
+        button.classList.add("text-white");
+      } else {
+        button.classList.add("bg-gray-300");
+        imgCell.classList.add("hidden");
+      }
+      row.appendChild(button);
+      return row;
+    }
+    async function updateUI(rootEl) {
+      const resp = await fetchAudioOutputs();
+      const fragment = document.createDocumentFragment();
+      resp.items.map(createRow).forEach((row) => row && fragment.appendChild(row));
+      rootEl.appendChild(fragment);
+    }
+    updateUI(rootEl);
+    setInterval(() => {
+      updateUI(rootEl);
+    }, 4000);
+  </script>
+</body>
+</html>

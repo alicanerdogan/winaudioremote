@@ -1,0 +1,53 @@
+{
+  "tasks": [
+    {
+      "type": "cppbuild",
+      "label": "C/C++: cl.exe build active file as library",
+      "command": "cl.exe",
+      "args": [
+        "/O1",
+        "/LD",
+        "/Zi",
+        "/EHsc",
+        "/Fe:",
+        "${fileDirname}\\${fileBasenameNoExtension}.dll",
+        "${file}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$msCompile"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: cl.exe"
+    },
+    {
+      "type": "cppbuild",
+      "label": "C/C++: cl.exe build active file as library in debug mode",
+      "command": "cl.exe",
+      "args": [
+        "/O1",
+        "/LD",
+        "/Zi",
+        "/MDd",
+        "/D_DEBUG",
+        "/EHsc",
+        "/Fe:",
+        "${fileDirname}\\${fileBasenameNoExtension}.dll",
+        "${file}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$msCompile"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: cl.exe"
+    }
+  ],
+  "version": "2.0.0"
+}
