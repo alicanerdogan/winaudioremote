@@ -51,6 +51,16 @@ struct AudioDevicePatchRequest {
     is_default: bool,
 }
 
+#[derive(Debug, Deserialize)]
+struct MasterVolumeRequest {
+    level: u64,
+}
+
+#[derive(Debug, Serialize)]
+struct MasterVolumeResponse {
+    level: u64,
+}
+
 // Responder
 impl Responder for AudioDevicesResponse {
     type Error = Error;
@@ -94,6 +104,36 @@ async fn patch_audio_device(
     Ok(format!("Welcome {} {}!", audio_device_id, req.is_default))
 }
 
+// Responder
+impl Responder for MasterVolumeResponse {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Error>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+
+        // Create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
+#[get("/api/master_volume")]
+async fn get_master_volume() -> impl Responder {
+    let master_volume = audiodevice::get_master_volume().unwrap();
+
+    MasterVolumeResponse {
+        level: master_volume,
+    }
+}
+
+#[patch("/api/master_volume")]
+async fn patch_master_volume(req: web::Json<MasterVolumeRequest>) -> Result<String, Error> {
+    audiodevice::set_master_volume(req.level).unwrap();
+    Ok(String::from(""))
+}
+
 fn handle_bad_request<B>(
     res: dev::ServiceResponse<B>,
 ) -> Result<errhandlers::ErrorHandlerResponse<body::Body>, Error> {
@@ -125,6 +165,8 @@ async fn main() {
             .service(index)
             .service(patch_audio_device)
             .service(get_audio_devices)
+            .service(get_master_volume)
+            .service(patch_master_volume)
     })
     .bind("0.0.0.0:3030")
     .unwrap()

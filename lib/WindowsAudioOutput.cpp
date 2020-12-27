@@ -1,6 +1,15 @@
 #pragma comment(lib, "ole32.lib")
 
 #include "WindowsAudioOutput.h"
+#include <stdio.h>
+#include <tchar.h>
+#include "windows.h"
+#include "Mmdeviceapi.h"
+#include "PolicyConfig.h"
+#include "Propidl.h"
+#include "Functiondiscoverykeys_devpkey.h"
+#include <endpointvolume.h>
+#include <math.h>
 
 #ifdef __DEBUG
 #define _CRTDBG_MAP_ALLOC
@@ -161,5 +170,61 @@ extern "C"
 #ifdef __DEBUG
     heapdump();
 #endif
+  }
+
+  EXPORT u64 GetMasterVolume()
+  {
+    HRESULT hr;
+
+    CoInitialize(NULL);
+    IMMDeviceEnumerator *deviceEnumerator = NULL;
+    hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), (LPVOID *)&deviceEnumerator);
+    IMMDevice *defaultDevice = NULL;
+
+    hr = deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDevice);
+    deviceEnumerator->Release();
+    deviceEnumerator = NULL;
+
+    IAudioEndpointVolume *endpointVolume = NULL;
+    hr = defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID *)&endpointVolume);
+    defaultDevice->Release();
+    defaultDevice = NULL;
+
+    float currentVolume = 0;
+    hr = endpointVolume->GetMasterVolumeLevelScalar(&currentVolume);
+
+    endpointVolume->Release();
+    CoUninitialize();
+
+    return roundf(currentVolume * 100);
+  }
+
+  EXPORT void SetMasterVolume(u64 newVolume)
+  {
+    HRESULT hr;
+
+    CoInitialize(NULL);
+
+    IMMDeviceEnumerator *deviceEnumerator = NULL;
+    hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), (LPVOID *)&deviceEnumerator);
+
+    IMMDevice *defaultDevice = NULL;
+    hr = deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDevice);
+
+    IAudioEndpointVolume *endpointVolume = NULL;
+    hr = defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID *)&endpointVolume);
+
+    hr = endpointVolume->SetMasterVolumeLevelScalar(((float)((float)newVolume) / 100.0), NULL);
+
+    endpointVolume->Release();
+    endpointVolume = NULL;
+
+    defaultDevice->Release();
+    defaultDevice = NULL;
+
+    deviceEnumerator->Release();
+    deviceEnumerator = NULL;
+
+    CoUninitialize();
   }
 }

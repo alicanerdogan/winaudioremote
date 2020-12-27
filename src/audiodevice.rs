@@ -30,11 +30,9 @@ pub fn export_dll() {
     let mut path = env::current_exe().unwrap().parent().unwrap().to_path_buf();
     path.push("WindowsAudioOutput");
     path.set_extension("dll");
-    if !path.exists() {
-        let bytes = include_bytes!("../WindowsAudioOutput.dll");
-        let mut file = File::create(path).unwrap();
-        file.write_all(bytes).unwrap();
-    }
+    let bytes = include_bytes!("../lib/WindowsAudioOutput.dll");
+    let mut file = File::create(path).unwrap();
+    file.write_all(bytes).unwrap();
 }
 
 pub fn get_devices() -> Result<Vec<AudioDevice>, Box<dyn std::error::Error>> {
@@ -93,6 +91,34 @@ pub fn set_default_audio_device(
     }
 }
 
+pub fn get_master_volume() -> Result<u64, Box<dyn std::error::Error>> {
+    // Note: this example does work on Windows
+    let mut path = env::current_exe().unwrap().parent().unwrap().to_path_buf();
+    path.push("WindowsAudioOutput");
+    path.set_extension("dll");
+
+    let lib = libloading::Library::new(path.as_path())?;
+    unsafe {
+        let func: libloading::Symbol<unsafe extern "C" fn() -> u64> =
+            lib.get(b"GetMasterVolume")?;
+        Ok(func())
+    }
+}
+
+pub fn set_master_volume(volume: u64) -> Result<(), Box<dyn std::error::Error>> {
+    // Note: this example does work on Windows
+    let mut path = env::current_exe().unwrap().parent().unwrap().to_path_buf();
+    path.push("WindowsAudioOutput");
+    path.set_extension("dll");
+
+    let lib = libloading::Library::new(path.as_path())?;
+    unsafe {
+        let func: libloading::Symbol<unsafe extern "C" fn(u64) -> ()> =
+            lib.get(b"SetMasterVolume")?;
+        Ok(func(volume))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -124,6 +150,17 @@ mod tests {
         let devices = get_devices()?;
         let default_device = devices.iter().find(|&d| d.is_default).unwrap();
         set_default_audio_device(&default_device.id)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_setting_and_getting_master_volume() -> Result<(), Box<dyn std::error::Error>> {
+        export_dll();
+        let volume = 41;
+        set_master_volume(volume)?;
+        let master_volume = get_master_volume()?;
+        assert_eq!(volume, master_volume);
 
         Ok(())
     }

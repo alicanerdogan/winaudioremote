@@ -6,25 +6,441 @@
   <title>Windows Remote Audio Controller</title>
   <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 </head>
+<style>
+.knob-surround {
+  position: relative;
+  background-color: grey;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  border: solid 0.25em #0e0e0e;
+  margin: 5em auto;
+  background: #181818;
+  background: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0, #1d1d1d),
+    color-stop(1, #131313)
+  );
+  background: -ms-linear-gradient(bottom, #1d1d1d, #131313);
+  background: -moz-linear-gradient(center bottom, #1d1d1d 0, #131313 100%);
+  background: -o-linear-gradient(#131313, #1d1d1d);
+  -webkit-box-shadow: 0 0.2em 0.1em 0.05em rgba(255, 255, 255, 0.1) inset,
+    0 -0.2em 0.1em 0.05em rgba(0, 0, 0, 0.5) inset,
+    0 0.5em 0.65em 0 rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 0.2em 0.1em 0.05em rgba(255, 255, 255, 0.1) inset,
+    0 -0.2em 0.1em 0.05em rgba(0, 0, 0, 0.5) inset,
+    0 0.5em 0.65em 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0.2em 0.1em 0.05em rgba(255, 255, 255, 0.1) inset,
+    0 -0.2em 0.1em 0.05em rgba(0, 0, 0, 0.5) inset,
+    0 0.5em 0.65em 0 rgba(0, 0, 0, 0.3);
+}
+.knob {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  -webkit-transform: rotate(0);
+  -moz-transform: rotate(0);
+  -o-transform: rotate(0);
+  -ms-transform: rotate(0);
+  transform: rotate(0);
+  z-index: 10;
+}
+.knob:before {
+  content: "";
+  position: absolute;
+  bottom: 19%;
+  left: 19%;
+  width: 3%;
+  height: 3%;
+  background-color: #a8d8f8;
+  border-radius: 50%;
+  -webkit-box-shadow: 0 0 0.4em 0 #79c3f4;
+  -moz-box-shadow: 0 0 0.4em 0 #79c3f4;
+  box-shadow: 0 0 0.4em 0 #79c3f4;
+}
+.max,
+.min {
+  display: block;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  -webkit-font-smoothing: antialiased;
+  font-size: 70%;
+  position: absolute;
+}
+.min {
+  bottom: 1em;
+  left: -2.5em;
+}
+.max {
+  bottom: 1em;
+  right: -2.5em;
+}
+.tick {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  overflow: visible;
+}
+.tick:after {
+  content: "";
+  width: 0.08em;
+  height: 0.6em;
+  background-color: rgba(255, 255, 255, 0.2);
+  position: absolute;
+  top: -1.5em;
+  left: 50%;
+  -webkit-transition: all 180ms ease-out;
+  -moz-transition: all 180ms ease-out;
+  -o-transition: all 180ms ease-out;
+  transition: all 180ms ease-out;
+}
+.activetick:after {
+  background-color: #a8d8f8;
+  -webkit-box-shadow: 0 0 0.3em 0.08em #79c3f4;
+  -moz-box-shadow: 0 0 0.3em 0.08em #79c3f4;
+  box-shadow: 0 0 0.3em 0.08em #79c3f4;
+  -webkit-transition: all 50ms ease-in;
+  -moz-transition: all 50ms ease-in;
+  -o-transition: all 50ms ease-in;
+  transition: all 50ms ease-in;
+}
+.tick:nth-child(1) {
+  -webkit-transform: rotate(-135deg);
+  -moz-transform: rotate(-135deg);
+  -o-transform: rotate(-135deg);
+  -ms-transform: rotate(-135deg);
+  transform: rotate(-135deg);
+}
+.tick:nth-child(2) {
+  -webkit-transform: rotate(-125deg);
+  -moz-transform: rotate(-125deg);
+  -o-transform: rotate(-125deg);
+  -ms-transform: rotate(-125deg);
+  transform: rotate(-125deg);
+}
+.tick:nth-child(3) {
+  -webkit-transform: rotate(-115deg);
+  -moz-transform: rotate(-115deg);
+  -o-transform: rotate(-115deg);
+  -ms-transform: rotate(-115deg);
+  transform: rotate(-115deg);
+}
+.tick:nth-child(4) {
+  -webkit-transform: rotate(-105deg);
+  -moz-transform: rotate(-105deg);
+  -o-transform: rotate(-105deg);
+  -ms-transform: rotate(-105deg);
+  transform: rotate(-105deg);
+}
+.tick:nth-child(5) {
+  -webkit-transform: rotate(-95deg);
+  -moz-transform: rotate(-95deg);
+  -o-transform: rotate(-95deg);
+  -ms-transform: rotate(-95deg);
+  transform: rotate(-95deg);
+}
+.tick:nth-child(6) {
+  -webkit-transform: rotate(-85deg);
+  -moz-transform: rotate(-85deg);
+  -o-transform: rotate(-85deg);
+  -ms-transform: rotate(-85deg);
+  transform: rotate(-85deg);
+}
+.tick:nth-child(7) {
+  -webkit-transform: rotate(-75deg);
+  -moz-transform: rotate(-75deg);
+  -o-transform: rotate(-75deg);
+  -ms-transform: rotate(-75deg);
+  transform: rotate(-75deg);
+}
+.tick:nth-child(8) {
+  -webkit-transform: rotate(-65deg);
+  -moz-transform: rotate(-65deg);
+  -o-transform: rotate(-65deg);
+  -ms-transform: rotate(-65deg);
+  transform: rotate(-65deg);
+}
+.tick:nth-child(9) {
+  -webkit-transform: rotate(-55deg);
+  -moz-transform: rotate(-55deg);
+  -o-transform: rotate(-55deg);
+  -ms-transform: rotate(-55deg);
+  transform: rotate(-55deg);
+}
+.tick:nth-child(10) {
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+.tick:nth-child(11) {
+  -webkit-transform: rotate(-35deg);
+  -moz-transform: rotate(-35deg);
+  -o-transform: rotate(-35deg);
+  -ms-transform: rotate(-35deg);
+  transform: rotate(-35deg);
+}
+.tick:nth-child(12) {
+  -webkit-transform: rotate(-25deg);
+  -moz-transform: rotate(-25deg);
+  -o-transform: rotate(-25deg);
+  -ms-transform: rotate(-25deg);
+  transform: rotate(-25deg);
+}
+.tick:nth-child(13) {
+  -webkit-transform: rotate(-15deg);
+  -moz-transform: rotate(-15deg);
+  -o-transform: rotate(-15deg);
+  -ms-transform: rotate(-15deg);
+  transform: rotate(-15deg);
+}
+.tick:nth-child(14) {
+  -webkit-transform: rotate(-5deg);
+  -moz-transform: rotate(-5deg);
+  -o-transform: rotate(-5deg);
+  -ms-transform: rotate(-5deg);
+  transform: rotate(-5deg);
+}
+.tick:nth-child(15) {
+  -webkit-transform: rotate(5deg);
+  -moz-transform: rotate(5deg);
+  -o-transform: rotate(5deg);
+  -ms-transform: rotate(5deg);
+  transform: rotate(5deg);
+}
+.tick:nth-child(16) {
+  -webkit-transform: rotate(15deg);
+  -moz-transform: rotate(15deg);
+  -o-transform: rotate(15deg);
+  -ms-transform: rotate(15deg);
+  transform: rotate(15deg);
+}
+.tick:nth-child(17) {
+  -webkit-transform: rotate(25deg);
+  -moz-transform: rotate(25deg);
+  -o-transform: rotate(25deg);
+  -ms-transform: rotate(25deg);
+  transform: rotate(25deg);
+}
+.tick:nth-child(18) {
+  -webkit-transform: rotate(35deg);
+  -moz-transform: rotate(35deg);
+  -o-transform: rotate(35deg);
+  -ms-transform: rotate(35deg);
+  transform: rotate(35deg);
+}
+.tick:nth-child(19) {
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+.tick:nth-child(20) {
+  -webkit-transform: rotate(55deg);
+  -moz-transform: rotate(55deg);
+  -o-transform: rotate(55deg);
+  -ms-transform: rotate(55deg);
+  transform: rotate(55deg);
+}
+.tick:nth-child(21) {
+  -webkit-transform: rotate(65deg);
+  -moz-transform: rotate(65deg);
+  -o-transform: rotate(65deg);
+  -ms-transform: rotate(65deg);
+  transform: rotate(65deg);
+}
+.tick:nth-child(22) {
+  -webkit-transform: rotate(75deg);
+  -moz-transform: rotate(75deg);
+  -o-transform: rotate(75deg);
+  -ms-transform: rotate(75deg);
+  transform: rotate(75deg);
+}
+.tick:nth-child(19) {
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+.tick:nth-child(20) {
+  -webkit-transform: rotate(55deg);
+  -moz-transform: rotate(55deg);
+  -o-transform: rotate(55deg);
+  -ms-transform: rotate(55deg);
+  transform: rotate(55deg);
+}
+.tick:nth-child(21) {
+  -webkit-transform: rotate(65deg);
+  -moz-transform: rotate(65deg);
+  -o-transform: rotate(65deg);
+  -ms-transform: rotate(65deg);
+  transform: rotate(65deg);
+}
+.tick:nth-child(22) {
+  -webkit-transform: rotate(75deg);
+  -moz-transform: rotate(75deg);
+  -o-transform: rotate(75deg);
+  -ms-transform: rotate(75deg);
+  transform: rotate(75deg);
+}
+.tick:nth-child(23) {
+  -webkit-transform: rotate(85deg);
+  -moz-transform: rotate(85deg);
+  -o-transform: rotate(85deg);
+  -ms-transform: rotate(85deg);
+  transform: rotate(85deg);
+}
+.tick:nth-child(24) {
+  -webkit-transform: rotate(95deg);
+  -moz-transform: rotate(95deg);
+  -o-transform: rotate(95deg);
+  -ms-transform: rotate(95deg);
+  transform: rotate(95deg);
+}
+.tick:nth-child(25) {
+  -webkit-transform: rotate(105deg);
+  -moz-transform: rotate(105deg);
+  -o-transform: rotate(105deg);
+  -ms-transform: rotate(105deg);
+  transform: rotate(105deg);
+}
+.tick:nth-child(26) {
+  -webkit-transform: rotate(115deg);
+  -moz-transform: rotate(115deg);
+  -o-transform: rotate(115deg);
+  -ms-transform: rotate(115deg);
+  transform: rotate(115deg);
+}
+.tick:nth-child(27) {
+  -webkit-transform: rotate(125deg);
+  -moz-transform: rotate(125deg);
+  -o-transform: rotate(125deg);
+  -ms-transform: rotate(125deg);
+  transform: rotate(125deg);
+}
+.tick:nth-child(28) {
+  -webkit-transform: rotate(135deg);
+  -moz-transform: rotate(135deg);
+  -o-transform: rotate(135deg);
+  -ms-transform: rotate(135deg);
+  transform: rotate(135deg);
+}
+h1 {
+  font-weight: 400;
+  margin: 2em 0;
+}
+p {
+  line-height: 150%;
+  max-width: 36em;
+  margin: 1em auto;
+}
+a {
+  color: #aaa;
+  text-decoration: none;
+  border-bottom: 1px solid #444;
+  -webkit-transition: color 0.2s ease-in;
+  -moz-transition: color 0.2s ease-in;
+  -o-transition: color 0.2s ease-in;
+  transition: color 0.2s ease-in;
+}
+a:focus,
+a:hover {
+  color: #eee;
+}
+body {
+  background: #282828;
+}
+.bg-button {
+  background: #535353;
+}
+.bg-active-button {
+  background: #121212;
+}
+.knob-label {
+  display: flex;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  font-size: 48px;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+.knob-label > span {
+  margin-bottom: 12px;
+}
+.knob-surround {
+  display: none;
+}
+</style>
 <body>
   <ul id="app" class="w-full m-auto mt-8 max-w-screen-md"></ul>
+  <div class="knob-surround">
+    <div class="knob-label"><span>41</span></div>
+    <div class="knob"></div>
+    <span class="min">Min</span>
+    <span class="max">Max</span>
+    <div class="ticks">
+      <div class="tick activetick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+      <div class="tick"></div>
+    </div>
+  </div>
   <script>
     const rootEl = document.getElementById("app");
     async function fetchAudioOutputs() {
-      const res = await fetch('/api/audio_devices');
+      const res = await fetch("/api/audio_devices");
       return await res.json();
     }
     async function setDefaultAudioOutput(id) {
-      const res = await fetch(`/api/audio_devices/${encodeURI(id)}`,{method: "PATCH", body: JSON.stringify({is_default: true}), headers: {"Content-Type": "application/json"}});
+      const res = await fetch(`/api/audio_devices/${encodeURI(id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_default: true }),
+        headers: { "Content-Type": "application/json" },
+      });
       await updateUI(rootEl);
     }
     function createRow(device) {
       const domId = device.id.replace(/^[^a-z]+|[^\w:.-]+/gi, "");
       const existingButton = document.querySelector(`#${domId} button`);
       if (existingButton) {
-        existingButton.classList.toggle("bg-indigo-600", device.is_default);
-        existingButton.classList.toggle("text-white", device.is_default);
-        existingButton.classList.toggle("bg-gray-300", !device.is_default);
+        existingButton.classList.toggle("bg-active-button", device.is_default);
+        existingButton.classList.toggle("bg-button", !device.is_default);
         const existingButtonImg = document.querySelector(`#${domId} button img`);
         existingButtonImg.classList.toggle("hidden", !device.is_default);
         return;
@@ -39,15 +455,15 @@
       const imgCell = document.createElement("img");
       imgCell.src = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0iZmVhdGhlciBmZWF0aGVyLWNoZWNrIj48cG9seWxpbmUgcG9pbnRzPSIyMCA2IDkgMTcgNCAxMiI+PC9wb2x5bGluZT48L3N2Zz4=`;
       const textCell = document.createElement("span");
-      textCell.className="truncate";
+      textCell.className = "truncate";
       textCell.appendChild(document.createTextNode(device.name));
       button.appendChild(textCell);
       button.appendChild(imgCell);
+      button.classList.add("text-white");
       if (device.is_default) {
-        button.classList.add("bg-indigo-600");
-        button.classList.add("text-white");
+        button.classList.add("bg-active-button");
       } else {
-        button.classList.add("bg-gray-300");
+        button.classList.add("bg-button");
         imgCell.classList.add("hidden");
       }
       row.appendChild(button);
@@ -63,6 +479,147 @@
     setInterval(() => {
       updateUI(rootEl);
     }, 4000);
+    async function fetchMasterVolume() {
+      const res = await fetch("/api/master_volume");
+      return await res.json();
+    }
+    async function setMasterVolume(level) {
+      const res = await fetch(`/api/master_volume`, {
+        method: "PATCH",
+        body: JSON.stringify({ level: Math.round(level) }),
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    const knobLabel = document.querySelector(".knob-label > span");
+    const knobSurround = document.querySelector(".knob-surround");
+    async function updateKnob() {
+      const { level } = await fetchMasterVolume();
+      setAngle(level);
+    }
+    updateKnob();
+    setInterval(async () => {
+      if (window.oncontextmenu === null) {
+        updateKnob();
+      }
+    }, 4000);
+    const knob = document.querySelector(".knob");
+    const ticks = Array.from(document.querySelectorAll(".tick"));
+    function setAngle(value) {
+      const angle = Math.round((value / 100) * 270);
+      ["-moz-transform", "-webkit-transform", "-ms-transform"].forEach(
+        (styleKey) => (knob.style[styleKey] = `rotate(${angle}deg)`)
+      );
+      const activeTickCount = Math.round(angle / 10) + 1;
+      ticks.forEach((tick) => tick.classList.remove("activetick"));
+      ticks
+        .slice(0, activeTickCount)
+        .forEach((tick) => tick.classList.add("activetick"));
+      knobLabel.innerText = Math.round(value);
+      knobSurround.style.display = "block";
+    }
+    
+    let _touchX = null;
+    let _touchY = null;
+    function _onTouchstart(e) {
+      e.preventDefault();
+      _touchX = e.changedTouches[0].clientX;
+      _touchY = e.changedTouches[0].clientY;
+      _rotationStart();
+      knob.addEventListener("touchmove", _onTouchmove);
+      knob.addEventListener("touchend", _onTouchend);
+      knob.addEventListener("touchcancel", _onTouchend);
+    }
+    
+    function _onTouchmove(e) {
+      e.preventDefault();
+      _touchX = e.targetTouches[0].clientX;
+      _touchY = e.targetTouches[0].clientY;
+      _rotationChange();
+    }
+    
+    function _onTouchend(e) {
+      e.preventDefault();
+      knob.removeEventListener("touchmove", _onTouchmove);
+      knob.removeEventListener("touchend", _onTouchend);
+      knob.removeEventListener("touchcancel", _onTouchend);
+      _rotationEnd();
+    }
+    
+    function _onMousedown(e) {
+      _touchX = e.clientX;
+      _touchY = e.clientY;
+      _rotationStart();
+      document.addEventListener("mousemove", _onMousemove);
+      document.addEventListener("mouseup", _onMouseup);
+    }
+    
+    function _onMousemove(e) {
+      e.preventDefault();
+      _touchX = e.clientX;
+      _touchY = e.clientY;
+      _rotationChange();
+    }
+    
+    function _onMouseup(e) {
+      e.preventDefault();
+      document.removeEventListener("mousemove", _onMousemove);
+      document.removeEventListener("mouseup", _onMouseup);
+      _rotationEnd();
+    }
+    
+    let _centerX = null;
+    let _centerY = null;
+    let _initialAngle = null;
+    let _attemptedAngle = null;
+    let _initialTouchAngle = null;
+    let _angle = 0;
+    let min = 0;
+    let max = 100;
+    let _attemptedValue = null;
+    let _value = 0;
+    let scale = 3000;
+    
+    function _rotationStart() {
+      window.oncontextmenu = () => {
+        return false;
+      };
+      _centerX =
+        knob.offsetLeft - knob.scrollLeft + knob.clientLeft + knob.offsetWidth / 2;
+      _centerY =
+        knob.offsetTop - knob.scrollTop + knob.clientTop + knob.offsetHeight / 2;
+      _initialAngle = _angle;
+      _attemptedAngle = _angle;
+      _initialTouchAngle = Math.atan2(_touchY - _centerY, _touchX - _centerX);
+    }
+    
+    const TWO_PI = 2 * Math.PI;
+    
+    function _rotationChange() {
+      _attemptedAngle =
+        _initialAngle -
+        _initialTouchAngle +
+        Math.atan2(_touchY - _centerY, _touchX - _centerX);
+    
+      _attemptedValue = _attemptedAngle / (TWO_PI / scale);
+    
+      if (_attemptedValue >= min && _attemptedValue <= max) {
+        _angle = _attemptedAngle;
+        _value = _attemptedValue;
+      } else if (_attemptedValue < min) {
+        _value = min;
+      } else if (_attemptedValue > max) {
+        _value = max;
+      }
+      setAngle(_value);
+    }
+    
+    function _rotationEnd() {
+      window.oncontextmenu = null;
+      setMasterVolume(_value);
+    }
+    
+    knob.addEventListener("touchstart", _onTouchstart);
+    knob.addEventListener("mousedown", _onMousedown);
   </script>
 </body>
 </html>
